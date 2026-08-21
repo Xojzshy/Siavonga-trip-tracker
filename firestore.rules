@@ -1,0 +1,53 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function isValidAttendee(data) {
+      return data.keys().hasAll(['name', 'confirmed', 'amountPaid', 'tripType'])
+        && data.keys().size() == 4
+        && data.name is string
+        && data.name.size() >= 1
+        && data.name.size() <= 100
+        && data.confirmed is bool
+        && (data.amountPaid is number || data.amountPaid is int)
+        && data.amountPaid >= 0
+        && (data.tripType == '1D1N' || data.tripType == '2D1N');
+    }
+
+    function isValidTripSettings(data) {
+      return data.keys().hasAll(['tripDate', 'activeTripType'])
+        && data.keys().size() == 2
+        && data.tripDate is string
+        && data.tripDate.size() <= 100
+        && (data.activeTripType == '1D1N' || data.activeTripType == '2D1N');
+    }
+
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Attendees Collection
+    match /attendees/{attendeeId} {
+      allow read: if true;
+      allow create: if isValidId(attendeeId) && isValidAttendee(incoming());
+      allow update: if isValidId(attendeeId) && isValidAttendee(incoming());
+      allow delete: if isValidId(attendeeId);
+    }
+
+    // Trip Settings Document
+    match /settings/trip {
+      allow read: if true;
+      allow create, update: if isValidTripSettings(incoming());
+      allow delete: if false;
+    }
+  }
+}

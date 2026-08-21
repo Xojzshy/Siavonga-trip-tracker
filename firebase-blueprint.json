@@ -1,0 +1,58 @@
+{
+  "entities": {
+    "Attendee": {
+      "title": "Attendee",
+      "description": "An attendee registered for the trip",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "description": "Full name of the attendee"
+        },
+        "confirmed": {
+          "type": "boolean",
+          "description": "Confirmation status"
+        },
+        "amountPaid": {
+          "type": "number",
+          "description": "Amount paid in Kwacha"
+        },
+        "tripType": {
+          "type": "string",
+          "enum": ["1D1N", "2D1N"],
+          "description": "Package chosen"
+        }
+      },
+      "required": ["name", "confirmed", "amountPaid", "tripType"]
+    },
+    "TripSettings": {
+      "title": "TripSettings",
+      "description": "Trip configuration settings",
+      "type": "object",
+      "properties": {
+        "tripDate": {
+          "type": "string",
+          "description": "Date of departure"
+        },
+        "activeTripType": {
+          "type": "string",
+          "enum": ["1D1N", "2D1N"],
+          "description": "Active package setting"
+        }
+      },
+      "required": ["tripDate", "activeTripType"]
+    }
+  },
+  "firestore": {
+    "/attendees/{attendeeId}": {
+      "schema": { "$ref": "#/entities/Attendee" },
+      "description": "Collection of trip attendees"
+    },
+    "/settings/trip": {
+      "schema": { "$ref": "#/entities/TripSettings" },
+      "description": "Global settings for the trip"
+    }
+  }
+}
