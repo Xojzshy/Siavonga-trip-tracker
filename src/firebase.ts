@@ -163,7 +163,8 @@ export function subscribeTripSettingsFirestore(
         const data = snapshot.data();
         onData({
           tripDate: data.tripDate || "2026-10-02T00:00:00+02:00",
-          activeTripType: data.activeTripType === "2D1N" ? "2D1N" : "1D1N"
+          activeTripType: data.activeTripType === "2D1N" ? "2D1N" : "1D1N",
+          selectedGroupSize: data.selectedGroupSize || 20
         });
       }
     },

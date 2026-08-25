@@ -40,6 +40,10 @@
           "type": "string",
           "enum": ["1D1N", "2D1N"],
           "description": "Active package setting"
+        },
+        "selectedGroupSize": {
+          "type": "number",
+          "description": "Target headcount scaling size (15-24)"
         }
       },
       "required": ["tripDate", "activeTripType"]

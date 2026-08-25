@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { Attendee, TripSettings, TripType } from "./types";
+import { motion, AnimatePresence } from "motion/react";
+import { Attendee, TripSettings, TripType, ActiveTab } from "./types";
 import {
   INITIAL_MOCK_ATTENDEES,
   DEFAULT_TRIP_SETTINGS,
@@ -17,22 +18,42 @@ import {
 } from "./firebase";
 
 import { Header } from "./components/Header";
-import { Countdown } from "./components/Countdown";
-import { TripTypeToggle } from "./components/TripTypeToggle";
-import { StatsOverview } from "./components/StatsOverview";
-import { AttendeeRoster } from "./components/AttendeeRoster";
+import { Navbar } from "./components/Navbar";
+import { OverviewTab } from "./components/tabs/OverviewTab";
+import { PaymentsTab } from "./components/tabs/PaymentsTab";
+import { BudgetTab } from "./components/tabs/BudgetTab";
+import { ComparisonTab } from "./components/tabs/ComparisonTab";
+import { GuideTab } from "./components/tabs/GuideTab";
+import { ReportsTab } from "./components/tabs/ReportsTab";
+
 import { AddEditAttendeeModal } from "./components/AddEditAttendeeModal";
 import { ReportModal } from "./components/ReportModal";
 import { FirebaseModal } from "./components/FirebaseModal";
 import { DocGuideModal } from "./components/DocGuideModal";
 import { calculateTripMetrics } from "./utils/formatters";
-import { Compass, Sparkles, MapPin, Anchor } from "lucide-react";
 
 const STORAGE_KEY_ATTENDEES = "siavonga_trip_attendees_v1";
 const STORAGE_KEY_SETTINGS = "siavonga_trip_settings_v1";
 const STORAGE_KEY_FIREBASE = "siavonga_trip_firebase_config_v1";
+const STORAGE_KEY_GROUP_SIZE = "siavonga_selected_group_size_v1";
 
 export default function App() {
+  const [activeTab, setActiveTab] = useState<ActiveTab>("overview");
+
+  // Selected scaling group size (15 to 24, default 20)
+  const [selectedGroupSize, setSelectedGroupSize] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY_GROUP_SIZE);
+      if (saved) {
+        const val = parseInt(saved, 10);
+        if (val >= 15 && val <= 24) return val;
+      }
+    } catch (e) {
+      console.warn("Could not read saved group size:", e);
+    }
+    return 20;
+  });
+
   // Load saved custom firebase config from localStorage if present
   const [fbConfig, setFbConfig] = useState<typeof firebaseConfig>(() => {
     try {
@@ -52,7 +73,6 @@ export default function App() {
       const saved = localStorage.getItem(STORAGE_KEY_ATTENDEES);
       if (saved) {
         const parsed = JSON.parse(saved);
-        // Clean out cached legacy mock entries if present
         if (Array.isArray(parsed) && parsed.some((a) => a.id && a.id.startsWith("att-"))) {
           localStorage.removeItem(STORAGE_KEY_ATTENDEES);
           return [];
@@ -83,6 +103,11 @@ export default function App() {
   const [isFirebaseModalOpen, setIsFirebaseModalOpen] = useState(false);
   const [isDocsModalOpen, setIsDocsModalOpen] = useState(false);
 
+  // Sync group size to localStorage
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY_GROUP_SIZE, selectedGroupSize.toString());
+  }, [selectedGroupSize]);
+
   // Sync state to localStorage when running in local mock mode
   useEffect(() => {
     if (!isFirebaseActive) {
@@ -100,7 +125,6 @@ export default function App() {
   useEffect(() => {
     if (!isFirebaseActive) return;
 
-    // Listen to attendees collection
     const unsubscribeAttendees = subscribeAttendeesFirestore(
       (liveAttendees) => {
         if (liveAttendees) {
@@ -111,7 +135,6 @@ export default function App() {
       fbConfig
     );
 
-    // Listen to trip settings document
     const unsubscribeSettings = subscribeTripSettingsFirestore(
       (liveSettings) => {
         if (liveSettings) {
@@ -133,6 +156,16 @@ export default function App() {
     setTripSettings((prev) => ({ ...prev, activeTripType: newType }));
     if (isFirebaseActive) {
       updateTripSettingsFirestore({ activeTripType: newType }, fbConfig);
+    }
+  };
+
+  // Change group size scaler
+  const handleGroupSizeChange = (newSize: number) => {
+    const clamped = Math.max(15, Math.min(24, newSize));
+    setSelectedGroupSize(clamped);
+    setTripSettings((prev) => ({ ...prev, selectedGroupSize: clamped }));
+    if (isFirebaseActive) {
+      updateTripSettingsFirestore({ selectedGroupSize: clamped }, fbConfig);
     }
   };
 
@@ -158,7 +191,6 @@ export default function App() {
     id?: string
   ) => {
     if (id) {
-      // Edit existing
       setAttendees((prev) =>
         prev.map((a) => (a.id === id ? { ...a, ...data } : a))
       );
@@ -166,7 +198,6 @@ export default function App() {
         await updateAttendeeFirestore(id, data, fbConfig);
       }
     } else {
-      // Create new
       const newId = `att-${Date.now()}`;
       const newAttendee: Attendee = { id: newId, ...data };
       setAttendees((prev) => [...prev, newAttendee]);
@@ -194,8 +225,10 @@ export default function App() {
   const handleResetMockData = () => {
     setAttendees(INITIAL_MOCK_ATTENDEES);
     setTripSettings(DEFAULT_TRIP_SETTINGS);
+    setSelectedGroupSize(20);
     localStorage.removeItem(STORAGE_KEY_ATTENDEES);
     localStorage.removeItem(STORAGE_KEY_SETTINGS);
+    localStorage.removeItem(STORAGE_KEY_GROUP_SIZE);
   };
 
   // Save Custom Firebase Config
@@ -204,81 +237,99 @@ export default function App() {
     localStorage.setItem(STORAGE_KEY_FIREBASE, JSON.stringify(newConfig));
   };
 
-  const metrics = calculateTripMetrics(attendees, tripSettings.activeTripType);
+  const metrics = calculateTripMetrics(attendees, tripSettings.activeTripType, selectedGroupSize);
 
   return (
     <div className="min-h-screen bg-[#FAF7F2] text-slate-800 font-sans selection:bg-[#C9911D]/30 selection:text-slate-900 pb-16">
       
       {/* Header */}
-      <Header
-        isFirebaseActive={isFirebaseActive}
-        onOpenReport={() => setIsReportModalOpen(true)}
-        onOpenFirebaseModal={() => setIsFirebaseModalOpen(true)}
-        onOpenDocsModal={() => setIsDocsModalOpen(true)}
-        onOpenAddAttendee={() => {
-          setEditingAttendee(null);
-          setIsAddModalOpen(true);
-        }}
+      <Header />
+
+      {/* Navigation Bar */}
+      <Navbar
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        confirmedCount={metrics.confirmedHeadcount}
+        totalAttendeesCount={attendees.length}
       />
 
-      {/* Main Container */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 space-y-6">
-        
-        {/* Destination Location Sub-Banner */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between bg-gradient-to-r from-[#0B4F6C]/10 via-[#C9911D]/10 to-transparent p-4 rounded-2xl border border-[#0B4F6C]/15 gap-2">
-          <div className="flex items-center space-x-2 text-xs font-semibold text-[#0B4F6C]">
-            <MapPin className="w-4 h-4 text-[#C9911D]" />
-            <span>Destination: Siavonga District, Southern Province, Lake Kariba Zambia</span>
-          </div>
-          <div className="flex items-center gap-3 text-xs text-slate-600 font-medium">
-            <span className="flex items-center gap-1">
-              <Anchor className="w-3.5 h-3.5 text-cyan-700" />
-              Min Capacity: 15
-            </span>
-            <span>•</span>
-            <span className="flex items-center gap-1 font-bold text-slate-900">
-              Max Capacity: 24
-            </span>
-          </div>
-        </div>
+      {/* Main Multi-page Container */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeTab}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+          >
+            {(activeTab === "overview" || (activeTab as string) === "dashboard") && (
+              <OverviewTab
+                attendees={attendees}
+                activeTripType={tripSettings.activeTripType}
+                selectedGroupSize={selectedGroupSize}
+                tripDateStr={tripSettings.tripDate}
+                onTripTypeChange={handleTripTypeChange}
+                onGroupSizeChange={handleGroupSizeChange}
+                onNavigateToPayments={() => setActiveTab("payments")}
+                onNavigateToBudget={() => setActiveTab("budget")}
+              />
+            )}
 
-        {/* Hero Section: Countdown & Package Option Toggle */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2">
-            <Countdown targetDateStr={tripSettings.tripDate || TRIP_DATE} />
-          </div>
-          <div className="lg:col-span-1">
-            <TripTypeToggle
-              activeTripType={tripSettings.activeTripType}
-              onChangeTripType={handleTripTypeChange}
-              confirmedHeadcount={metrics.confirmedHeadcount}
-            />
-          </div>
-        </div>
+            {(activeTab === "payments" || (activeTab as string) === "attendees") && (
+              <PaymentsTab
+                attendees={attendees}
+                activeTripType={tripSettings.activeTripType}
+                selectedGroupSize={selectedGroupSize}
+                onToggleConfirmed={handleToggleConfirmed}
+                onEditAttendee={(att) => {
+                  setEditingAttendee(att);
+                  setIsAddModalOpen(true);
+                }}
+                onDeleteAttendee={handleDeleteAttendee}
+                onOpenAddModal={() => {
+                  setEditingAttendee(null);
+                  setIsAddModalOpen(true);
+                }}
+                onResetMockData={handleResetMockData}
+              />
+            )}
 
-        {/* Dashboard Metrics Overview */}
-        <StatsOverview
-          attendees={attendees}
-          activeTripType={tripSettings.activeTripType}
-        />
+            {activeTab === "budget" && (
+              <BudgetTab
+                activeTripType={tripSettings.activeTripType}
+                selectedGroupSize={selectedGroupSize}
+                onTripTypeChange={handleTripTypeChange}
+                onGroupSizeChange={handleGroupSizeChange}
+                confirmedCount={metrics.confirmedHeadcount}
+              />
+            )}
 
-        {/* Attendee Roster Table */}
-        <AttendeeRoster
-          attendees={attendees}
-          activeTripType={tripSettings.activeTripType}
-          onToggleConfirmed={handleToggleConfirmed}
-          onEditAttendee={(att) => {
-            setEditingAttendee(att);
-            setIsAddModalOpen(true);
-          }}
-          onDeleteAttendee={handleDeleteAttendee}
-          onOpenAddModal={() => {
-            setEditingAttendee(null);
-            setIsAddModalOpen(true);
-          }}
-          onResetMockData={handleResetMockData}
-        />
+            {activeTab === "comparison" && (
+              <ComparisonTab
+                selectedGroupSize={selectedGroupSize}
+                onGroupSizeChange={handleGroupSizeChange}
+                onSelectPackage={(pkg) => handleTripTypeChange(pkg)}
+              />
+            )}
 
+            {activeTab === "guide" && (
+              <GuideTab
+                activeTripType={tripSettings.activeTripType}
+              />
+            )}
+
+            {activeTab === "reports" && (
+              <ReportsTab
+                attendees={attendees}
+                activeTripType={tripSettings.activeTripType}
+                tripDateStr={tripSettings.tripDate || TRIP_DATE}
+                onOpenDocsModal={() => setIsDocsModalOpen(true)}
+                onOpenFirebaseModal={() => setIsFirebaseModalOpen(true)}
+              />
+            )}
+          </motion.div>
+        </AnimatePresence>
       </main>
 
       {/* Modals */}

@@ -23,11 +23,9 @@ service cloud.firestore {
     }
 
     function isValidTripSettings(data) {
-      return data.keys().hasAll(['tripDate', 'activeTripType'])
-        && data.keys().size() == 2
-        && data.tripDate is string
-        && data.tripDate.size() <= 100
-        && (data.activeTripType == '1D1N' || data.activeTripType == '2D1N');
+      return (!('tripDate' in data) || (data.tripDate is string && data.tripDate.size() <= 100))
+        && (!('activeTripType' in data) || (data.activeTripType == '1D1N' || data.activeTripType == '2D1N'))
+        && (!('selectedGroupSize' in data) || ((data.selectedGroupSize is number || data.selectedGroupSize is int) && data.selectedGroupSize >= 15 && data.selectedGroupSize <= 24));
     }
 
     // Default deny

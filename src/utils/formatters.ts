@@ -1,8 +1,8 @@
-import { Attendee, AttendeeWithStatus, PaymentStatus, TripType } from "../types";
+import { Attendee, AttendeeWithStatus, CategoryBreakdown, PaymentStatus, TripType } from "../types";
 import { COST_TABLE } from "../data/costTable";
 
 /**
- * Formats a numerical amount as Zambian Kwacha (e.g. K21,109.00 or -K1,200.00).
+ * Formats a numerical amount as Zambian Kwacha (e.g. K21,725.00 or -K1,200.00).
  */
 export function formatKwacha(amount: number): string {
   const isNegative = amount < 0;
@@ -15,20 +15,70 @@ export function formatKwacha(amount: number): string {
 }
 
 /**
- * Calculates current funding goal stats based on confirmed headcount and active trip type.
+ * Computes category breakdown for a package and group size (15-24).
  */
-export function calculateTripMetrics(attendees: Attendee[], activeTripType: TripType) {
+export function getCategoryBreakdown(tripType: TripType, groupSize: number): CategoryBreakdown {
+  const clampedSize = Math.max(15, Math.min(24, groupSize));
+  const tier = COST_TABLE[tripType][clampedSize];
+  const total = tier.total;
+
+  if (tripType === "1D1N") {
+    const transport = 3500; // Fixed hire cost (fuel/tolls sponsor-covered)
+    const accommodation = 8050; // Group lodge allocation
+    const foodCatering = Math.round(clampedSize * 290);
+    const activities = Math.round(clampedSize * 120);
+    const contingency = Math.max(0, total - (transport + accommodation + foodCatering + activities));
+
+    return {
+      accommodation,
+      transport,
+      foodCatering,
+      activities,
+      contingency,
+      total
+    };
+  } else {
+    const transport = 7000; // Fixed hire cost (fuel sponsored)
+    const accommodation = 8300; // Group lodge overnight allocation
+    const foodCatering = Math.round(clampedSize * 383.35);
+    const activities = Math.round(clampedSize * 136.65);
+    const contingency = Math.max(0, total - (transport + accommodation + foodCatering + activities));
+
+    return {
+      accommodation,
+      transport,
+      foodCatering,
+      activities,
+      contingency,
+      total
+    };
+  }
+}
+
+/**
+ * Calculates current funding goal stats based on confirmed headcount, selected group size, and active trip type.
+ */
+export function calculateTripMetrics(
+  attendees: Attendee[],
+  activeTripType: TripType,
+  overrideGroupSize?: number
+) {
   const confirmedAttendees = attendees.filter((a) => a.confirmed);
   const confirmedHeadcount = confirmedAttendees.length;
 
-  // Clamped headcount between 15 and 24 for COST_TABLE lookup
-  const clampedHeadcount = Math.max(15, Math.min(24, confirmedHeadcount));
+  // Use override group size if set, otherwise fallback to confirmed headcount clamped 15-24
+  const targetGroupSize = overrideGroupSize && overrideGroupSize >= 15 && overrideGroupSize <= 24
+    ? overrideGroupSize
+    : Math.max(15, Math.min(24, confirmedHeadcount || 20));
+
+  const clampedHeadcount = Math.max(15, Math.min(24, targetGroupSize));
   const activeCostTier = COST_TABLE[activeTripType][clampedHeadcount];
 
   const goalTotal = activeCostTier.total;
   const perPersonTarget = activeCostTier.perPerson;
+  const categoryBreakdown = getCategoryBreakdown(activeTripType, clampedHeadcount);
 
-  // Total funds raised from ALL attendees (or confirmed ones)
+  // Total funds raised from ALL attendees
   const totalRaised = attendees.reduce((sum, a) => sum + (a.amountPaid || 0), 0);
   const confirmedRaised = confirmedAttendees.reduce((sum, a) => sum + (a.amountPaid || 0), 0);
 
@@ -62,13 +112,15 @@ export function calculateTripMetrics(attendees: Attendee[], activeTripType: Trip
   const partiallyPaidCount = attendeesWithStatus.filter((a) => a.status === "partially_paid").length;
   const unpaidCount = attendeesWithStatus.filter((a) => a.status === "unpaid").length;
 
-  const progressPercentage = isViable ? Math.min(100, Math.round((totalRaised / goalTotal) * 1000) / 10) : Math.round((confirmedHeadcount / 15) * 100);
+  const progressPercentage = Math.min(100, Math.round((totalRaised / goalTotal) * 1000) / 10);
 
   return {
     confirmedHeadcount,
     clampedHeadcount,
+    targetGroupSize: clampedHeadcount,
     goalTotal,
     perPersonTarget,
+    categoryBreakdown,
     totalRaised,
     confirmedRaised,
     surplusOrShortfall,
@@ -83,6 +135,7 @@ export function calculateTripMetrics(attendees: Attendee[], activeTripType: Trip
     attendeesWithStatus
   };
 }
+
 
 /**
  * Generates plain text executive summary report formatted for pasting straight into Google Docs.

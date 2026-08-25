@@ -11,6 +11,7 @@ export interface Attendee {
 export interface TripSettings {
   tripDate: string; // ISO String or "2026-10-02"
   activeTripType: TripType;
+  selectedGroupSize: number; // Group size scaling 15 - 24
 }
 
 export interface CostTier {
@@ -27,3 +28,15 @@ export interface AttendeeWithStatus extends Attendee {
   targetAmount: number;
   balanceDue: number;
 }
+
+export type ActiveTab = "overview" | "budget" | "payments" | "comparison" | "guide" | "reports";
+
+export interface CategoryBreakdown {
+  accommodation: number;
+  transport: number;
+  foodCatering: number;
+  activities: number;
+  contingency: number;
+  total: number;
+}
+
