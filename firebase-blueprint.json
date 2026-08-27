@@ -21,7 +21,7 @@
         },
         "tripType": {
           "type": "string",
-          "enum": ["1D1N", "2D1N"],
+          "enum": ["1D1N", "3D2N", "2D1N"],
           "description": "Package chosen"
         }
       },
@@ -38,7 +38,7 @@
         },
         "activeTripType": {
           "type": "string",
-          "enum": ["1D1N", "2D1N"],
+          "enum": ["1D1N", "3D2N", "2D1N"],
           "description": "Active package setting"
         },
         "selectedGroupSize": {

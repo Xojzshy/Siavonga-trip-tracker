@@ -132,7 +132,7 @@ export function subscribeAttendeesFirestore(
           name: data.name || "Unnamed",
           confirmed: Boolean(data.confirmed),
           amountPaid: typeof data.amountPaid === "number" ? data.amountPaid : 0,
-          tripType: (data.tripType === "2D1N" ? "2D1N" : "1D1N") as TripType
+          tripType: (data.tripType === "2D1N" || data.tripType === "3D2N" ? "2D1N" : "1D1N") as TripType
         };
       });
       onData(list);
@@ -163,7 +163,7 @@ export function subscribeTripSettingsFirestore(
         const data = snapshot.data();
         onData({
           tripDate: data.tripDate || "2026-10-02T00:00:00+02:00",
-          activeTripType: data.activeTripType === "2D1N" ? "2D1N" : "1D1N",
+          activeTripType: data.activeTripType === "2D1N" || data.activeTripType === "3D2N" ? "2D1N" : "1D1N",
           selectedGroupSize: data.selectedGroupSize || 20
         });
       }

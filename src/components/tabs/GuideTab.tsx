@@ -1,18 +1,15 @@
 import React, { useState } from "react";
 import { TripType } from "../../types";
-import { ITINERARY_1D1N, ITINERARY_2D1N } from "../../data/budgetItemization";
+import { ITINERARY_1D1N, ITINERARY_2D1N, ItineraryActivity } from "../../data/budgetItemization";
 import {
-  Map,
   Clock,
   MapPin,
   CheckSquare,
   Square,
   Sun,
   ShieldAlert,
-  Sparkles,
   Luggage,
   Calendar,
-  Anchor,
   Compass
 } from "lucide-react";
 
@@ -59,7 +56,7 @@ export const GuideTab: React.FC<GuideTabProps> = ({ activeTripType }) => {
             <h2 className="text-xl font-bold font-serif text-amber-50">Siavonga & Lake Kariba Trip Guide</h2>
           </div>
           <p className="text-xs text-cyan-100/80 mt-1 max-w-2xl">
-            Detailed itinerary schedule, packing checklist, and travel guidelines for Lake Kariba, Zambia.
+            Trip schedule, packing checklist, and Siavonga travel tips.
           </p>
         </div>
 
@@ -110,6 +107,7 @@ export const GuideTab: React.FC<GuideTabProps> = ({ activeTripType }) => {
             <div className="space-y-8">
               {activeItinerary.map((day, dayIdx) => (
                 <div key={dayIdx} className="space-y-3">
+                  {/* Day Header */}
                   <div className="bg-slate-50 p-3 rounded-xl border border-slate-200/80 flex items-center justify-between">
                     <div>
                       <h4 className="font-bold text-slate-900 text-sm font-serif">{day.dayTitle}</h4>
@@ -120,24 +118,30 @@ export const GuideTab: React.FC<GuideTabProps> = ({ activeTripType }) => {
                     </span>
                   </div>
 
-                  <div className="relative pl-6 space-y-4 border-l-2 border-[#0B4F6C]/20 ml-2">
-                    {day.activities.map((act, actIdx) => (
-                      <div key={actIdx} className="relative group">
-                        {/* Dot indicator */}
-                        <div className="absolute -left-[31px] top-1.5 w-3.5 h-3.5 rounded-full bg-white border-2 border-[#0B4F6C] group-hover:bg-[#C9911D] transition-colors" />
+                  {/* Activity Timeline List */}
+                  <div className="relative pl-6 space-y-3 border-l-2 border-[#0B4F6C]/20 ml-2">
+                    {day.activities.map((act: ItineraryActivity) => (
+                      <div key={act.id} className="relative group">
+                        {/* Timeline dot indicator */}
+                        <div className="absolute -left-[31px] top-4 w-3.5 h-3.5 rounded-full border-2 bg-white border-[#0B4F6C] group-hover:bg-[#C9911D] transition-all" />
 
-                        <div className="p-3.5 bg-white hover:bg-slate-50/80 rounded-xl border border-slate-200/70 transition-colors shadow-2xs">
-                          <div className="flex flex-wrap items-center justify-between gap-1 text-xs mb-1">
-                            <span className="font-mono font-bold text-[#0B4F6C] flex items-center gap-1">
+                        {/* Static Activity Card */}
+                        <div className="p-3.5 rounded-xl border bg-white border-slate-200/80 shadow-2xs">
+                          {/* Card Top Row */}
+                          <div className="flex items-center justify-between gap-2 text-xs mb-1">
+                            <span className="font-mono font-bold text-[#0B4F6C] flex items-center gap-1.5">
                               <Clock className="w-3.5 h-3.5 text-[#C9911D]" />
                               {act.time}
                             </span>
-                            <span className="text-[10px] font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md flex items-center gap-1">
+
+                            <span className="text-[10px] font-semibold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md flex items-center gap-1">
                               <MapPin className="w-3 h-3 text-cyan-700" />
                               {act.location}
                             </span>
                           </div>
-                          <h5 className="font-bold text-slate-900 text-xs">{act.title}</h5>
+
+                          {/* Card Title & Summary Description */}
+                          <h5 className="font-bold text-slate-900 text-xs sm:text-sm">{act.title}</h5>
                           <p className="text-xs text-slate-600 mt-0.5 leading-relaxed">{act.description}</p>
                         </div>
                       </div>
@@ -198,14 +202,14 @@ export const GuideTab: React.FC<GuideTabProps> = ({ activeTripType }) => {
           <div className="bg-gradient-to-br from-amber-500/10 to-orange-500/5 p-5 rounded-2xl border border-amber-200 space-y-3 text-xs">
             <div className="flex items-center gap-2 text-amber-900 font-bold font-serif text-sm">
               <Sun className="w-5 h-5 text-amber-600" />
-              <span>Siavonga Climate & Tips</span>
+              <span>Siavonga Climate & Travel Advice</span>
             </div>
             <p className="text-slate-700 leading-relaxed">
-              Siavonga experiences warm tropical weather year-round (approx. 28°C - 34°C in October). Keep hydrated, wear sunscreen during the boat cruise, and ensure phone waterproof pouches are secured!
+              Siavonga experiences warm tropical weather year-round (approx. 28°C - 34°C in October). Keep hydrated, wear sunscreen during beach volleyball and the boat cruise, and ensure phone waterproof pouches are secured!
             </p>
             <div className="pt-2 border-t border-amber-200/60 flex items-center gap-1.5 text-amber-900 font-semibold">
               <ShieldAlert className="w-4 h-4 text-amber-700 shrink-0" />
-              <span>Carry valid National ID / Passport for Chirundu border post.</span>
+              <span>Carry physical National ID / Passport for Chirundu border post.</span>
             </div>
           </div>
 

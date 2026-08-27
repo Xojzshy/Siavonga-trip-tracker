@@ -152,6 +152,11 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
         </div>
       </div>
 
+      {/* Note Callout */}
+      <div className="p-3.5 bg-amber-50/80 border border-amber-200/80 rounded-2xl text-xs text-amber-950 font-medium shadow-2xs">
+        Every Slav is assigned to an equally exotic member
+      </div>
+
       {/* Main Interactive Controls: Package Selector & Group Size Slider */}
       <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-6">
         

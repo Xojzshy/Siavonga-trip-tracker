@@ -1,24 +1,23 @@
 import React from "react";
+import { TripType } from "../../types";
 import { COST_TABLE } from "../../data/costTable";
 import { formatKwacha, getCategoryBreakdown } from "../../utils/formatters";
 import {
   SlidersHorizontal,
   CheckCircle2,
   ArrowRight,
-  TrendingUp,
   Sparkles,
   Building2,
   Bus,
   Utensils,
   Anchor,
-  ShieldAlert,
-  Clock
+  ShieldAlert
 } from "lucide-react";
 
 interface ComparisonTabProps {
   selectedGroupSize: number;
   onGroupSizeChange: (size: number) => void;
-  onSelectPackage: (pkg: "1D1N" | "2D1N") => void;
+  onSelectPackage: (pkg: TripType) => void;
 }
 
 export const ComparisonTab: React.FC<ComparisonTabProps> = ({
@@ -42,7 +41,7 @@ export const ComparisonTab: React.FC<ComparisonTabProps> = ({
   return (
     <div className="space-y-6">
       
-      {/* Unsplash Header Banner */}
+      {/* Header Banner */}
       <div className="relative rounded-3xl overflow-hidden shadow-md border border-slate-200 bg-slate-900 text-white p-6 sm:p-8">
         <img
           src="https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=1600&q=80"
@@ -128,7 +127,7 @@ export const ComparisonTab: React.FC<ComparisonTabProps> = ({
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span>Sunset Lake Kariba boat cruise + beach pass</span>
+                <span>Sunset Lake Kariba boat cruise + beach volleyball</span>
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
@@ -150,14 +149,14 @@ export const ComparisonTab: React.FC<ComparisonTabProps> = ({
         {/* 2D1N Package Card */}
         <div className="bg-white p-6 rounded-3xl border-2 border-amber-300 shadow-sm flex flex-col justify-between space-y-6 relative overflow-hidden">
           <div className="absolute top-0 right-0 bg-[#C9911D] text-slate-950 px-4 py-1 text-[11px] font-extrabold rounded-bl-2xl">
-            Extended Experience
+            Complete Getaway
           </div>
 
           <div className="space-y-4">
             <div className="space-y-1">
               <span className="text-xs font-extrabold text-amber-700 uppercase tracking-wider">Option B</span>
               <h3 className="text-2xl font-black font-serif text-slate-900">2 Days 1 Night Package</h3>
-              <p className="text-xs text-slate-500">Extended 2-day getaway with extra lake time, double transit charter, and additional meals.</p>
+              <p className="text-xs text-slate-500">Full 2-day getaway with 1 night lodge stay, sunset boat cruise, and ZVC tournament play.</p>
             </div>
 
             <div className="p-4 bg-amber-50/80 rounded-2xl border border-amber-200/80 space-y-1">
@@ -171,19 +170,23 @@ export const ComparisonTab: React.FC<ComparisonTabProps> = ({
             <div className="space-y-2 text-xs text-slate-700">
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span>Extended lodge access & overnight accommodation</span>
+                <span>1 Night resort lodge accommodation</span>
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span>Full 2-day Coaster transit charter ({formatKwacha(7000)})</span>
+                <span>Coaster transit charter ({formatKwacha(7000)})</span>
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span>Extended boat cruise & beach volleyball tournament</span>
+                <span>Sunset Lake Kariba boat cruise</span>
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span>2-day complete meal & refreshment catering</span>
+                <span>Beach Volleyball Kickoff Match & ZVC Tournament Session</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span>Full group BBQ & meal catering</span>
               </div>
             </div>
           </div>
@@ -208,10 +211,10 @@ export const ComparisonTab: React.FC<ComparisonTabProps> = ({
             <span>Value Analysis @ {size} Attendees</span>
           </div>
           <h3 className="text-xl font-bold font-serif text-white mt-1">
-            2D1N Upgrade Cost Delta: <span className="text-amber-300 font-mono">+{formatKwacha(perPersonDiff)}</span> / person
+            2D1N Cost Delta: <span className="text-amber-300 font-mono">+{formatKwacha(perPersonDiff)}</span> / person
           </h3>
           <p className="text-xs text-slate-300 mt-0.5">
-            Upgrading to 2D1N adds {formatKwacha(totalDiff)} total to the group pool, providing 2 full days of transit, extra meals, and extended resort time.
+            Selecting 2D1N adds {formatKwacha(totalDiff)} total to the group pool, providing complete lodge chalets, extended transit, sunset boat cruise, and ZVC tournament play.
           </p>
         </div>
 

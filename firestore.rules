@@ -19,12 +19,12 @@ service cloud.firestore {
         && data.confirmed is bool
         && (data.amountPaid is number || data.amountPaid is int)
         && data.amountPaid >= 0
-        && (data.tripType == '1D1N' || data.tripType == '2D1N');
+        && (data.tripType == '1D1N' || data.tripType == '3D2N' || data.tripType == '2D1N');
     }
 
     function isValidTripSettings(data) {
       return (!('tripDate' in data) || (data.tripDate is string && data.tripDate.size() <= 100))
-        && (!('activeTripType' in data) || (data.activeTripType == '1D1N' || data.activeTripType == '2D1N'))
+        && (!('activeTripType' in data) || (data.activeTripType == '1D1N' || data.activeTripType == '3D2N' || data.activeTripType == '2D1N'))
         && (!('selectedGroupSize' in data) || ((data.selectedGroupSize is number || data.selectedGroupSize is int) && data.selectedGroupSize >= 15 && data.selectedGroupSize <= 24));
     }
 
